@@ -3,22 +3,36 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
 // --- Register User ---
+// --- Register User ---
 exports.registerUser = async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
 
+    // ✅ Check required fields
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Name, email, and password are required' });
+    }
+
+    // ✅ Check if email already exists
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ message: 'User already exists' });
 
+    // ✅ Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({ name, email, phone, password: hashedPassword });
 
+    // ✅ Create and save user
+    const user = new User({ name, email, phone, password: hashedPassword });
     await user.save();
+
+    console.log("✅ New user registered:", user); // Debug
+
     res.status(201).json({ message: 'User registered successfully' });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("❌ Registration failed:", err); // Debug
+    res.status(500).json({ message: 'Server error during registration' });
   }
 };
+
 
 // --- Login User ---
 exports.loginUser = async (req, res) => {
@@ -29,20 +43,28 @@ exports.loginUser = async (req, res) => {
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     const isMatch = await bcrypt.compare(password, user.password);
+
+    console.log("🔐 Comparing password for:", email);
+    console.log("DB Password:", user.password);
+    console.log("Match:", isMatch);
+
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
-    res.json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.isAdmin ? 'admin' : 'user'
-      }
-    });
+   res.json({
+  user: {
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    profileImage: user.profileImage,
+    plan: user.plan || 'free',  // ✅ This is what Navbar checks
+  },
+  token,
+});
+
   } catch (err) {
+    console.error("❌ Login failed:", err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -163,5 +185,21 @@ exports.upgradePlan = async (req, res) => {
     res.status(200).json({ message: 'Upgraded to premium' });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+exports.uploadProfileImage = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Multer uploads to Cloudinary already, so get URL from req.file
+    user.profileImage = req.file.path;
+    await user.save();
+
+    res.json({ message: 'Profile image uploaded successfully', imageUrl: user.profileImage });
+  } catch (err) {
+    console.error('Upload Error:', err);
+    res.status(500).json({ message: 'Image upload failed' });
   }
 };

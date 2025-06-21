@@ -1,3 +1,4 @@
+// ✅ FILE: context/AuthContext.js
 import { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
@@ -20,7 +21,6 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // ✅ Add logout function
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);

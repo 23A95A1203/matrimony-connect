@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../axios'; // ✅ use the custom instance
 import UpgradePlan from '../components/UpgradePlan';
 
 const Profile = () => {
@@ -19,10 +19,10 @@ const Profile = () => {
       ageRange: [],
       religion: '',
       caste: ''
-    }
+    },
+    imageFile: null
   });
 
-  // Fetch user profile on load
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -44,12 +44,13 @@ const Profile = () => {
             ageRange: data.preferences?.ageRange || [],
             religion: data.preferences?.religion || '',
             caste: data.preferences?.caste || ''
-          }
+          },
+          imageFile: null
         });
-        if (!data.dob || !data.gender) setEditMode(true); // trigger edit if incomplete
+        if (!data.dob || !data.gender) setEditMode(true);
       } catch (err) {
         console.error('Failed to load profile', err);
-        setEditMode(true); // allow new users to enter profile
+        setEditMode(true);
       }
     };
     fetchProfile();
@@ -57,8 +58,9 @@ const Profile = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
     if (name === 'minAge' || name === 'maxAge') {
-      setForm(prev => ({
+      setForm((prev) => ({
         ...prev,
         preferences: {
           ...prev.preferences,
@@ -69,12 +71,12 @@ const Profile = () => {
         }
       }));
     } else if (['religion', 'caste'].includes(name)) {
-      setForm(prev => ({
+      setForm((prev) => ({
         ...prev,
         preferences: { ...prev.preferences, [name]: value }
       }));
     } else {
-      setForm(prev => ({ ...prev, [name]: value }));
+      setForm((prev) => ({ ...prev, [name]: value }));
     }
   };
 
@@ -84,11 +86,26 @@ const Profile = () => {
       await axios.put('/api/users/profile', form, {
         headers: { Authorization: `Bearer ${token}` }
       });
+
+      // Upload profile image if exists
+      if (form.imageFile) {
+        const formData = new FormData();
+        formData.append('image', form.imageFile);
+
+        await axios.post('/api/users/upload-profile-image', formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+      }
+
       alert('Profile updated successfully');
       setEditMode(false);
-      setUser(form); // show updated profile
+      window.location.reload(); // reload to fetch new image if needed
     } catch (err) {
       alert('Failed to update profile');
+      console.error(err);
     }
   };
 
@@ -97,11 +114,22 @@ const Profile = () => {
   return (
     <div className="container mt-4">
       <h2>Profile</h2>
+
+      {/* ✅ Show profile image if exists */}
+      {user?.image && (
+        <div className="mb-3">
+          <img
+            src={`http://localhost:5000/uploads/${user.image}`}
+            alt="Profile"
+            style={{ width: 150, height: 150, objectFit: 'cover', borderRadius: '50%' }}
+          />
+        </div>
+      )}
+
       {!editMode ? (
         <>
-        <p><strong>Plan:</strong> {user?.plan}</p>
-{user?.plan === 'free' && <UpgradePlan />}
-
+          <p><strong>Plan:</strong> {user?.plan}</p>
+          {user?.plan === 'free' && <UpgradePlan />}
           <p><strong>Name:</strong> {user.name}</p>
           <p><strong>Date of Birth:</strong> {user.dob?.substr(0, 10)}</p>
           <p><strong>Gender:</strong> {user.gender}</p>
@@ -114,7 +142,6 @@ const Profile = () => {
           <p><strong>Age Range:</strong> {user.preferences?.ageRange?.join(' - ')}</p>
           <p><strong>Preferred Religion:</strong> {user.preferences?.religion}</p>
           <p><strong>Preferred Caste:</strong> {user.preferences?.caste}</p>
-
           <button className="btn btn-primary mt-2" onClick={() => setEditMode(true)}>Edit Profile</button>
         </>
       ) : (
@@ -141,6 +168,15 @@ const Profile = () => {
             value={form.preferences.religion || ''} onChange={handleChange} />
           <input className="form-control my-2" name="caste" placeholder="Preferred Caste"
             value={form.preferences.caste || ''} onChange={handleChange} />
+
+          {/* ✅ Profile Image Upload */}
+          <h5 className="mt-4">Upload Profile Image</h5>
+          <input
+            type="file"
+            accept="image/*"
+            className="form-control mb-3"
+            onChange={(e) => setForm((prev) => ({ ...prev, imageFile: e.target.files[0] }))}
+          />
 
           <button className="btn btn-success mt-3" type="submit">Save</button>
         </form>

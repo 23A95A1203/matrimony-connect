@@ -1,5 +1,6 @@
 import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import '../src/app.css';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Search from './pages/Search';
@@ -12,32 +13,37 @@ import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import EditProfile from './pages/EditProfile';
 import ReceivedInterests from './pages/ReceivedInterests';
-import UpgradePlan from './pages/UpgradePlan';
+import UpgradePlan from './components/UpgradePlan'; // ✅ Make sure this is from "pages"
 import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentFail from './pages/PaymentFail';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import Pricing from './pages/Pricing';
+
 function App() {
   return (
     <Router>
       <Navbar />
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/search" element={<Search />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/edit-profile" element={<EditProfile />} />
         <Route path="/terms" element={<Terms />} />
-  <Route path="/privacy" element={<Privacy />} />
-  <Route path="/pricing" element={<Pricing />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/pricing" element={<Pricing />} />
+
         {/* Protected Routes */}
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
         <Route path="/received-interests" element={<ProtectedRoute><ReceivedInterests /></ProtectedRoute>} />
-
-        {/* Upgrade + Payment */}
         <Route path="/upgrade" element={<ProtectedRoute><UpgradePlan /></ProtectedRoute>} />
+
+        {/* Payment Results */}
         <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/payment-fail" element={<PaymentFail />} />
 
         {/* 404 */}
         <Route path="*" element={<NotFound />} />
