@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import axios from '../axios';
 import { useNavigate } from 'react-router-dom';
 import { FaUserCircle, FaSearch, FaCrown } from 'react-icons/fa';
+<FaUserCircle />
 
 const Dashboard = () => {
   const navigate = useNavigate();
