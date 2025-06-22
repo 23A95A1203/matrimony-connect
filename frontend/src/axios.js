@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: 'https://matrimony-connect.onrender.com/',
   withCredentials: true, // required for cookie auth
 });
 
