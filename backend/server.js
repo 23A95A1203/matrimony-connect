@@ -11,7 +11,7 @@ const userRoutes = require('./routes/userRoutes');
 const payuRoutes = require('./routes/payuRoutes');
 const interestRoutes = require('./routes/interests');
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: 'https://matrimony-connect.netlify.app',
   credentials: true
 }));
 app.use(express.json());
