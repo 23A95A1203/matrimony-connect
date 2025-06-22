@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../axios'; // ✅
 
 const Register = () => {
   const [form, setForm] = useState({
@@ -16,7 +16,7 @@ const Register = () => {
   const handleSubmit = async e => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/users/register', form);
+      const res = await api.post('/api/users/register', form); // ✅ Use api instance
       alert(res.data.message);
     } catch (err) {
       alert(err.response?.data?.message || 'Registration failed');

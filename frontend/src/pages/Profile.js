@@ -118,8 +118,7 @@ const Profile = () => {
       {/* ✅ Show profile image if exists */}
       {user?.image && (
         <div className="mb-3">
-          <img
-            src={`http://localhost:5000/uploads/${user.image}`}
+          <img src={`https://matrimony-connect.onrender.com/uploads/${user.image}`} 
             alt="Profile"
             style={{ width: 150, height: 150, objectFit: 'cover', borderRadius: '50%' }}
           />

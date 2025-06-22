@@ -1,6 +1,5 @@
-// frontend/src/pages/Login.js
 import React, { useState, useContext } from 'react';
-import axios from 'axios';
+import api from '../axios'; // ✅ Use central API
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
@@ -16,11 +15,11 @@ const Login = () => {
   const handleSubmit = async e => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/users/login', form);
+      const res = await api.post('/api/users/login', form); // ✅ Use api instance
       localStorage.setItem('token', res.data.token);
-      setUser(res.data.user); // ✅ Set context
+      setUser(res.data.user);
       alert('Login successful');
-      navigate('/'); // ✅ Redirect
+      navigate('/');
     } catch (err) {
       alert(err.response?.data?.message || 'Login failed');
     }
