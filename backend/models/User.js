@@ -1,62 +1,35 @@
 // models/User.js
+
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-  profileImage: {
-  type: String,
-  default: '',
-},
-
-  name: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  email: {
-    type: String,
-    unique: true,
-    required: true,
-    lowercase: true,
-    trim: true
-  },
-  phone: {
-    type: String,
-    trim: true
-  },
-  password: {
-    type: String,
-    required: true
-  },
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  phone: String,
+  password: { type: String, required: true },
   dob: Date,
+  gender: String,
   religion: String,
   caste: String,
   location: String,
   profession: String,
+  bio: String,
   preferences: {
-    ageRange: {
-      type: [Number],
-      default: [20, 40]
-    },
+    ageRange: [Number], // [minAge, maxAge]
     religion: String,
-    caste: String
+    caste: String,
   },
-  interestsSent: [
-    { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
-  ],
-  interestsReceived: [
-    { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
-  ],
-  isAdmin: {
-    type: Boolean,
-    default: false
-  },
-  plan: {
-    type: String,
-    enum: ['free', 'premium'],
-    default: 'free'
-  }
+  profileImage: String,
+  plan: { type: String, enum: ['free', 'premium'], default: 'free' },
+  interestsSent: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  interestsReceived: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  // Inside User schema
+acceptedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+rejectedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+
 }, {
   timestamps: true
 });
 
+// ✅ This is critical!
 module.exports = mongoose.model('User', userSchema);

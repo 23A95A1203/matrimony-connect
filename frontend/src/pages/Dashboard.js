@@ -1,134 +1,165 @@
-// Summary: This file adds the following features:
-// - Profile icon in top-right with dropdown menu (Edit Profile, Received Interests, Logout)
-// - Upgrade to Premium button with modal to choose a plan and make payment
-// - Filter-based user search on dashboard
-
+// ✅ File: src/pages/Dashboard.js
 import React, { useState, useEffect } from 'react';
 import axios from '../axios';
 import { useNavigate } from 'react-router-dom';
-import { FaUserCircle, FaSearch, FaCrown } from 'react-icons/fa';
-<FaUserCircle />
+import {
+  FaUserCircle, FaCrown, FaHeart, FaEdit, FaSignOutAlt, FaSearch
+} from 'react-icons/fa';
+import './Dashboard.css';
+ // optional if you want separate Navbar layout
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [matches, setMatches] = useState([]);
+  const [filteredMatches, setFilteredMatches] = useState([]);
+  const [interestsCount, setInterestsCount] = useState(0);
+  const [sentIds, setSentIds] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [users, setUsers] = useState([]);
-  const [filters, setFilters] = useState({ religion: '', caste: '', minAge: '', maxAge: '' });
-
-  const token = localStorage.getItem('token');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const res = await axios.get('/api/users/profile', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setUser(res.data);
-    };
-    fetchUser();
-  }, [token]);
+    const fetchData = async () => {
+      try {
+        const profileRes = await axios.get('/users/profile');
+        setUser(profileRes.data);
 
-  const handleSearch = async () => {
-    const res = await axios.get('/api/users/search', {
-      headers: { Authorization: `Bearer ${token}` },
-      params: filters,
-    });
-    setUsers(res.data);
+        const matchesRes = await axios.get('/users/matches');
+        setMatches(matchesRes.data);
+        setFilteredMatches(matchesRes.data);
+
+        const interestRes = await axios.get('/users/received-interests');
+        setInterestsCount(interestRes.data.length);
+
+        const sent = profileRes.data?.interestsSent || [];
+        setSentIds(sent.map(id => id.toString()));
+      } catch (err) {
+        console.error("❌ Dashboard fetch failed", err);
+        navigate('/login');
+      }
+    };
+    fetchData();
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    try {
+      await axios.post('/users/logout');
+      navigate('/');
+    } catch (err) {
+      console.error("Logout failed", err);
+    }
   };
 
-  const handleUpgrade = async (amount) => {
+  const calculateAge = (dob) => {
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+    return age;
+  };
+
+  const handleSearch = (e) => {
+    const value = e.target.value.toLowerCase();
+    setSearchTerm(value);
+    setFilteredMatches(
+      matches.filter(match =>
+        match.name.toLowerCase().includes(value) ||
+        (match.religion && match.religion.toLowerCase().includes(value)) ||
+        (match.caste && match.caste.toLowerCase().includes(value))
+      )
+    );
+  };
+
+  const handleSendInterest = async (toUserId) => {
     try {
-      // simulate upgrade process
-      await axios.put('/api/users/profile', { plan: 'premium' }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      alert('Upgraded successfully!');
-      setShowPaymentModal(false);
-      window.location.reload();
+      const res = await axios.post('/interests/send', { toUserId }, { withCredentials: true });
+      alert(res.data.message);
+      setSentIds(prev => [...prev, toUserId]);
     } catch (err) {
-      alert('Upgrade failed');
+      alert(err.response?.data?.message || 'Failed to send interest');
     }
   };
 
   return (
-    <div className="container mt-4">
-      <div className="d-flex justify-content-between align-items-center">
-        <h2>Welcome, {user?.name}</h2>
-        <div style={{ position: 'relative' }}>
-          <img
-            src={user?.profileImage || 'https://via.placeholder.com/40'}
-            onClick={() => setShowDropdown(!showDropdown)}
-            style={{ width: 40, height: 40, borderRadius: '50%', cursor: 'pointer' }}
-            alt="profile"
+    <div className="dashboard-container">
+      <div className="dashboard-header">
+        <h3 className="logo-text">💍 Matrimony Connect</h3>
+
+        <div className="search-box-wrapper">
+          <FaSearch className="search-icon" />
+          <input
+            type="text"
+            className="search-box"
+            placeholder="Search matches..."
+            value={searchTerm}
+            onChange={handleSearch}
           />
+        </div>
+
+        {/* ✅ 💞 Mutual Matches in between Search and Interests */}
+        <button className="mutual-btn" onClick={() => navigate('/mutual-matches')}>
+           Mutual Matches 💞
+        </button>
+
+        <button className="interests-btn" onClick={() => navigate('/received-interests')}>
+          <FaHeart /> Interests ({interestsCount})
+        </button>
+
+        {user?.plan !== 'premium' && (
+          <button className="upgrade-navbar-btn" onClick={() => navigate('/upgrade')}>
+            <FaCrown /> Upgrade to Premium
+          </button>
+        )}
+
+        <div className="profile-icon" onClick={() => setShowDropdown(!showDropdown)}>
+          <FaUserCircle size={32} />
           {showDropdown && (
-            <div
-              className="card p-2"
-              style={{ position: 'absolute', top: 50, right: 0, zIndex: 1000 }}
-            >
-              <button className="btn btn-link" onClick={() => navigate('/edit-profile')}>Edit Profile</button>
-              <button className="btn btn-link" onClick={() => navigate('/interests')}>Received Interests</button>
-              <button className="btn btn-link" onClick={() => localStorage.clear() || navigate('/')}>Logout</button>
+            <div className="dropdown-menu-dashboard">
+              <button onClick={() => navigate('/edit-profile')}><FaEdit /> Edit Profile</button>
+              <button onClick={handleLogout}><FaSignOutAlt /> Logout</button>
             </div>
           )}
         </div>
       </div>
 
-      {!user?.plan || user?.plan === 'free' ? (
-        <button className="btn btn-warning mt-3" onClick={() => setShowPaymentModal(true)}>
-          <FaCrown /> Upgrade to Premium
-        </button>
-      ) : (
-        <span className="badge bg-success mt-3">Premium Member</span>
-      )}
-
-      {showPaymentModal && (
-        <div className="modal show d-block" tabIndex="-1" role="dialog">
-          <div className="modal-dialog" role="document">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Choose a Plan</h5>
-                <button type="button" className="btn-close" onClick={() => setShowPaymentModal(false)}></button>
-              </div>
-              <div className="modal-body">
-                <button className="btn btn-outline-primary w-100 mb-2" onClick={() => handleUpgrade(1)}>1₹ - 1 Day Access</button>
-                <button className="btn btn-outline-primary w-100 mb-2" onClick={() => handleUpgrade(10)}>10₹ - 10 Days Access</button>
-                <button className="btn btn-outline-primary w-100" onClick={() => handleUpgrade(100)}>100₹ - 30 Days Access</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <hr className="mt-4" />
-
-      <h4>Search Matches</h4>
-      <div className="row g-2">
-        <div className="col-md-3">
-          <input placeholder="Religion" className="form-control" value={filters.religion} onChange={(e) => setFilters({ ...filters, religion: e.target.value })} />
-        </div>
-        <div className="col-md-3">
-          <input placeholder="Caste" className="form-control" value={filters.caste} onChange={(e) => setFilters({ ...filters, caste: e.target.value })} />
-        </div>
-        <div className="col-md-3">
-          <input type="number" placeholder="Min Age" className="form-control" value={filters.minAge} onChange={(e) => setFilters({ ...filters, minAge: e.target.value })} />
-        </div>
-        <div className="col-md-3">
-          <input type="number" placeholder="Max Age" className="form-control" value={filters.maxAge} onChange={(e) => setFilters({ ...filters, maxAge: e.target.value })} />
-        </div>
+      <div className="welcome-section">
+        <h2>Welcome, {user?.name?.toUpperCase()} 👋</h2>
+        {user?.plan === 'premium' && (
+          <span className="premium-badge">🌟 Premium Member</span>
+        )}
       </div>
-      <button className="btn btn-primary mt-2" onClick={handleSearch}><FaSearch /> Search</button>
 
-      <div className="mt-4">
-        {users.map((u) => (
-          <div key={u._id} className="card p-3 mb-2">
-            <p><strong>{u.name}</strong></p>
-            <p>Religion: {u.religion}, Caste: {u.caste}</p>
-            <p>Age: {new Date().getFullYear() - new Date(u.dob).getFullYear()}</p>
-            <p>Location: {u.location}</p>
+      <div className="matches-section">
+        <h3>💘 Suggested Matches</h3>
+        {filteredMatches.length === 0 ? (
+          <p>No matches found based on your preferences or search.</p>
+        ) : (
+          <div className="match-cards">
+            {filteredMatches.map((match) => (
+              <div key={match._id} className="match-card">
+                <img
+                  src={match.profileImage || 'https://via.placeholder.com/100'}
+                  alt={match.name}
+                />
+                <h5>{match.name}</h5>
+                <p>{match.religion} | {match.caste}</p>
+                <p>Age: {calculateAge(match.dob)}</p>
+
+                {sentIds.includes(match._id) ? (
+                  <p className="interest-sent-text">✅ Interest Sent</p>
+                ) : (
+                  <button
+                    onClick={() => handleSendInterest(match._id)}
+                    className="send-interest-btn"
+                  >
+                    ❤️ Send Interest
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
-        ))}
+        )}
       </div>
     </div>
   );

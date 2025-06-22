@@ -16,7 +16,7 @@ const Register = () => {
   const handleSubmit = async e => {
     e.preventDefault();
     try {
-      const res = await api.post('/api/users/register', form); // ✅ Use api instance
+      const res = await api.post('/users/register', form); // ✅ Use api instance
       alert(res.data.message);
     } catch (err) {
       alert(err.response?.data?.message || 'Registration failed');

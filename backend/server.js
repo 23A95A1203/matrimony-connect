@@ -3,28 +3,27 @@ const app = express();
 const cors = require('cors');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
+const cookieParser = require('cookie-parser');
 
-// Load .env variables
 dotenv.config();
 
-// Import routes
 const userRoutes = require('./routes/userRoutes');
 const payuRoutes = require('./routes/payuRoutes');
-
-// Middleware
-app.use(cors());
+const interestRoutes = require('./routes/interests');
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true
+}));
 app.use(express.json());
-
-// Mount routes
+app.use(cookieParser());
+app.use('/api/interests', interestRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/payment', payuRoutes);
 
-// Optional default route for testing
 app.get('/', (req, res) => {
   res.send('✅ MatrimonyConnect API is running...');
 });
 
-// Connect to MongoDB and start server
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log("✅ Connected to MongoDB");

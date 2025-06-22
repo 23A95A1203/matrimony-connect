@@ -17,42 +17,42 @@ const UpgradePlan = () => {
   const handleUpgrade = async () => {
     setLoading(true);
     try {
-      const txnid = "Txn" + Date.now();
+      const txnid = 'Txn' + Date.now();
       const data = {
         amount: selected.amount,
-        productinfo: "MatrimonyConnect Premium",
+        productinfo: selected.label,
         firstname: user.name?.split(' ')[0] || 'User',
         email: user.email,
-        phone: user.phone || "9999999999",
+        phone: user.phone || '9999999999',
         txnid,
       };
 
       const res = await axios.post('http://localhost:5000/api/payment/payu-hash', data);
       const { hash } = res.data;
 
-      const form = document.createElement("form");
-      form.method = "POST";
-      form.action = "https://test.payu.in/_payment";
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = 'https://test.payu.in/_payment';
 
       const fields = {
-        key: "gtKFFx",
+        key: 'gtKFFx',
         txnid,
         amount: data.amount,
         productinfo: data.productinfo,
         firstname: data.firstname,
         email: data.email,
         phone: data.phone,
-        surl: "http://localhost:3000/payment-success",
-        furl: "http://localhost:3000/payment-failure",
+        surl: 'http://localhost:3000/payment-success',
+        furl: 'http://localhost:3000/payment-fail',
         hash,
-        service_provider: "payu_paisa",
-        udf1: "", udf2: "", udf3: "", udf4: "", udf5: "",
-        udf6: "", udf7: "", udf8: "", udf9: "", udf10: ""
+        service_provider: 'payu_paisa',
+        udf1: '', udf2: '', udf3: '', udf4: '', udf5: '',
+        udf6: '', udf7: '', udf8: '', udf9: '', udf10: ''
       };
 
       for (const key in fields) {
-        const input = document.createElement("input");
-        input.type = "hidden";
+        const input = document.createElement('input');
+        input.type = 'hidden';
         input.name = key;
         input.value = fields[key];
         form.appendChild(input);
@@ -61,8 +61,8 @@ const UpgradePlan = () => {
       document.body.appendChild(form);
       form.submit();
     } catch (err) {
-      console.error("PayU Payment Error:", err);
-      alert("Payment initiation failed.");
+      console.error('PayU Payment Error:', err);
+      alert('Payment initiation failed.');
     } finally {
       setLoading(false);
     }
@@ -70,10 +70,12 @@ const UpgradePlan = () => {
 
   return (
     <div className="container mt-5">
-      <h2 className="mb-4">Upgrade to Premium</h2>
+      <h2 className="mb-4 text-center">💎 Upgrade to Premium</h2>
 
       {user?.plan === 'premium' ? (
-        <div className="alert alert-success">🎉 You are already a Premium Member</div>
+        <div className="alert alert-success text-center">
+          🎉 You are already a <strong>Premium Member</strong>!
+        </div>
       ) : (
         <>
           <div className="row">
@@ -85,7 +87,9 @@ const UpgradePlan = () => {
                 style={{ cursor: 'pointer' }}
               >
                 <div
-                  className={`card shadow-sm ${selected.amount === plan.amount ? 'border-primary border-2' : ''}`}
+                  className={`card shadow-sm ${
+                    selected.amount === plan.amount ? 'border-primary border-2' : ''
+                  }`}
                 >
                   <div className="card-body">
                     <h5 className="card-title">{plan.label}</h5>
@@ -100,13 +104,17 @@ const UpgradePlan = () => {
             ))}
           </div>
 
-          <button
-            className="btn btn-primary mt-3"
-            onClick={handleUpgrade}
-            disabled={loading}
-          >
-            {loading ? 'Processing Payment...' : `Pay ₹${selected.amount} and Upgrade`}
-          </button>
+          <div className="text-center">
+            <button
+              className="btn btn-success mt-4 px-4"
+              onClick={handleUpgrade}
+              disabled={loading}
+            >
+              {loading
+                ? 'Processing Payment...'
+                : `Pay ₹${selected.amount} and Upgrade`}
+            </button>
+          </div>
         </>
       )}
     </div>

@@ -1,53 +1,108 @@
-// src/pages/EditProfile.js
+// ✅ File: src/pages/EditProfile.js
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../axios';
+import './EditProfile.css';
 
 const EditProfile = () => {
-  const [name, setName] = useState('');
-  const [dob, setDob] = useState('');
-  const [gender, setGender] = useState('');
-  const [religion, setReligion] = useState('');
-  const [caste, setCaste] = useState('');
-  const [profession, setProfession] = useState('');
-  const [location, setLocation] = useState('');
-  const [bio, setBio] = useState('');
-  const [preferences, setPreferences] = useState({
-    ageRange: [],
+  const [form, setForm] = useState({
+    name: '',
+    dob: '',
+    gender: '',
     religion: '',
-    caste: ''
+    caste: '',
+    profession: '',
+    location: '',
+    bio: '',
+    preferences: { ageRange: [], religion: '', caste: '' },
+    profileImage: '',
+    imageFile: null,
   });
 
+  const [loading, setLoading] = useState(false);
+
+  // ✅ Load existing profile
   useEffect(() => {
     const fetchProfile = async () => {
-      const res = await axios.get('/api/users/profile', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      const user = res.data;
-      setName(user.name);
-      setDob(user.dob?.substr(0, 10));
-      setGender(user.gender);
-      setReligion(user.religion);
-      setCaste(user.caste);
-      setProfession(user.profession);
-      setLocation(user.location);
-      setBio(user.bio);
-      setPreferences(user.preferences || {});
+      try {
+        const res = await axios.get('/users/profile');
+        const user = res.data;
+        setForm(prev => ({
+          ...prev,
+          ...user,
+          dob: user.dob?.substr(0, 10),
+          preferences: user.preferences || { ageRange: [], religion: '', caste: '' },
+        }));
+      } catch (err) {
+        console.error('❌ Profile fetch error', err);
+      }
     };
     fetchProfile();
   }, []);
 
+  // ✅ Handle field changes
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (['minAge', 'maxAge'].includes(name)) {
+      setForm(prev => ({
+        ...prev,
+        preferences: {
+          ...prev.preferences,
+          ageRange: [
+            name === 'minAge' ? Number(value) : prev.preferences.ageRange?.[0] || '',
+            name === 'maxAge' ? Number(value) : prev.preferences.ageRange?.[1] || '',
+          ],
+        },
+      }));
+    } else if (['religion', 'caste'].includes(name)) {
+      setForm(prev => ({
+        ...prev,
+        preferences: { ...prev.preferences, [name]: value },
+      }));
+    } else {
+      setForm(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  // ✅ Upload to Cloudinary
+  const handleImageUpload = async (file) => {
+    const data = new FormData();
+    data.append('file', file);
+    data.append('upload_preset', 'matrimony_upload'); // ✅ your preset
+    data.append('cloud_name', 'dqmfyxz4b'); // ✅ your cloud name
+
+    try {
+      const res = await fetch('https://api.cloudinary.com/v1_1/dqmfyxz4b/image/upload', {
+        method: 'POST',
+        body: data,
+      });
+      const json = await res.json();
+      return json.secure_url;
+    } catch (err) {
+      console.error('❌ Image upload failed:', err);
+      return null;
+    }
+  };
+
+  // ✅ Save form
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const updatedData = {
-      name, dob, gender, religion, caste, profession, location, bio, preferences
-    };
+    setLoading(true);
+
+    let imageUrl = form.profileImage;
+    if (form.imageFile) {
+      const uploadedUrl = await handleImageUpload(form.imageFile);
+      if (uploadedUrl) imageUrl = uploadedUrl;
+    }
+
     try {
-      await axios.put('/api/users/profile', updatedData, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      alert('Profile updated successfully');
-    } catch (error) {
-      alert('Update failed');
+      const updatedForm = { ...form, profileImage: imageUrl };
+      await axios.put('/users/profile', updatedForm);
+      alert('✅ Profile updated successfully');
+    } catch (err) {
+      console.error('❌ Profile update error', err);
+      alert('❌ Update failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -55,38 +110,41 @@ const EditProfile = () => {
     <div className="container mt-4">
       <h2>Edit Profile</h2>
       <form onSubmit={handleSubmit}>
-        <input className="form-control my-2" placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} />
-        <input className="form-control my-2" type="date" value={dob} onChange={e => setDob(e.target.value)} />
-        <input className="form-control my-2" placeholder="Gender" value={gender} onChange={e => setGender(e.target.value)} />
-        <input className="form-control my-2" placeholder="Religion" value={religion} onChange={e => setReligion(e.target.value)} />
-        <input className="form-control my-2" placeholder="Caste" value={caste} onChange={e => setCaste(e.target.value)} />
-        <input className="form-control my-2" placeholder="Profession" value={profession} onChange={e => setProfession(e.target.value)} />
-        <input className="form-control my-2" placeholder="Location" value={location} onChange={e => setLocation(e.target.value)} />
-        <textarea className="form-control my-2" placeholder="About You" value={bio} onChange={e => setBio(e.target.value)} />
+        <input className="form-control my-2" name="name" value={form.name} onChange={handleChange} placeholder="Full Name" />
+        <input className="form-control my-2" name="dob" type="date" value={form.dob} onChange={handleChange} />
+        <input className="form-control my-2" name="gender" value={form.gender} onChange={handleChange} placeholder="Gender" />
+        <input className="form-control my-2" name="religion" value={form.religion} onChange={handleChange} placeholder="Religion" />
+        <input className="form-control my-2" name="caste" value={form.caste} onChange={handleChange} placeholder="Caste" />
+        <input className="form-control my-2" name="profession" value={form.profession} onChange={handleChange} placeholder="Profession" />
+        <input className="form-control my-2" name="location" value={form.location} onChange={handleChange} placeholder="Location" />
+        <textarea className="form-control my-2" name="bio" value={form.bio} onChange={handleChange} placeholder="About You" />
 
-        <h5 className="mt-4">Match Preferences</h5>
+        <h5 className="mt-3">Match Preferences</h5>
         <div className="d-flex gap-2">
-          <input className="form-control" type="number" placeholder="Min Age"
-            value={preferences.ageRange?.[0] || ''}
-            onChange={e => setPreferences(prev => ({
-              ...prev,
-              ageRange: [Number(e.target.value), prev.ageRange?.[1] || '']
-            }))} />
-          <input className="form-control" type="number" placeholder="Max Age"
-            value={preferences.ageRange?.[1] || ''}
-            onChange={e => setPreferences(prev => ({
-              ...prev,
-              ageRange: [prev.ageRange?.[0] || '', Number(e.target.value)]
-            }))} />
+          <input name="minAge" className="form-control" placeholder="Min Age" value={form.preferences.ageRange?.[0] || ''} onChange={handleChange} />
+          <input name="maxAge" className="form-control" placeholder="Max Age" value={form.preferences.ageRange?.[1] || ''} onChange={handleChange} />
         </div>
-        <input className="form-control my-2" placeholder="Preferred Religion"
-          value={preferences.religion || ''}
-          onChange={e => setPreferences(prev => ({ ...prev, religion: e.target.value }))} />
-        <input className="form-control my-2" placeholder="Preferred Caste"
-          value={preferences.caste || ''}
-          onChange={e => setPreferences(prev => ({ ...prev, caste: e.target.value }))} />
+        <input name="religion" className="form-control my-2" placeholder="Preferred Religion" value={form.preferences.religion || ''} onChange={handleChange} />
+        <input name="caste" className="form-control my-2" placeholder="Preferred Caste" value={form.preferences.caste || ''} onChange={handleChange} />
 
-        <button className="btn btn-success mt-3">Save Changes</button>
+        <h5 className="mt-3">Upload Profile Image</h5>
+        <input
+          type="file"
+          accept="image/*"
+          className="form-control mb-3"
+          onChange={(e) => setForm(prev => ({ ...prev, imageFile: e.target.files[0] }))}
+        />
+
+        {/* ✅ Show preview if already uploaded */}
+        {form.profileImage && (
+          <div className="mb-3">
+            <img src={form.profileImage} alt="Preview" style={{ width: 120, height: 120, borderRadius: '50%' }} />
+          </div>
+        )}
+
+        <button className="btn btn-success mt-2" type="submit" disabled={loading}>
+          {loading ? 'Saving...' : 'Save Changes'}
+        </button>
       </form>
     </div>
   );

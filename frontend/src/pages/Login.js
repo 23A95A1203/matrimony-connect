@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import api from '../axios'; // ✅ Use central API
+import api from '../axios';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
@@ -15,11 +15,10 @@ const Login = () => {
   const handleSubmit = async e => {
     e.preventDefault();
     try {
-      const res = await api.post('/api/users/login', form); // ✅ Use api instance
-      localStorage.setItem('token', res.data.token);
+      const res = await api.post('/users/login', form); // ✅ token will come as cookie
       setUser(res.data.user);
       alert('Login successful');
-      navigate('/');
+      navigate('/dashboard'); // ✅ lowercase path
     } catch (err) {
       alert(err.response?.data?.message || 'Login failed');
     }

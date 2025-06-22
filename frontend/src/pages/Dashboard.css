@@ -1,0 +1,166 @@
+/* src/pages/Dashboard.css */
+.dashboard-container {
+  padding: 20px;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #dbe3ea;
+  min-height: 100vh;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  background-color: #fff;
+  padding: 10px 20px;
+  border-radius: 10px;
+}
+
+.logo-text {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #2e2e2e;
+}
+
+.search-box {
+  padding: 6px 10px;
+  width: 200px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.interests-btn,
+.upgrade-navbar-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  background-color: #a0c878;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.upgrade-navbar-btn {
+  background-color: #ffc107;
+  color: black;
+}
+
+.profile-icon {
+  position: relative;
+  cursor: pointer;
+}
+
+.dropdown-menu-dashboard {
+  position: absolute;
+  right: 0;
+  top: 40px;
+  background: white;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 0 6px rgba(0,0,0,0.1);
+}
+
+.dropdown-menu-dashboard button {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.welcome-section {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.premium-badge {
+  display: inline-block;
+  background-color: gold;
+  color: black;
+  padding: 6px 12px;
+  font-weight: bold;
+  border-radius: 20px;
+  margin-top: 10px;
+}
+
+.matches-section {
+  margin-top: 40px;
+}
+
+.match-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+}
+
+.match-card {
+  background: white;
+  border-radius: 10px;
+  padding: 15px;
+  width: 200px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.match-card img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.search-box-wrapper {
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+}
+
+.search-box {
+  padding: 6px 10px 6px 30px; /* Extra left padding for icon */
+}
+.send-interest-btn {
+  background-color: #ec4899;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 8px;
+  transition: background 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+.send-interest-btn:hover {
+  background-color: #db2777;
+}
+
+.interest-sent-text {
+  border: #2e2e2e  solid 1px ;
+  border-radius: 5px;
+  color: #16a34a;
+  font-size: 14px;
+  margin-top: 8px;
+  font-weight: 500;
+}
+.mutual-btn {
+  background-color: #ffc0cb;
+  border: none;
+  padding: 8px 14px;
+  margin: 0 10px;
+  border-radius: 20px;
+  color: #333;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+.mutual-btn:hover {
+  background-color: #ffb6c1;
+}
